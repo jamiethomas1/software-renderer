@@ -39,3 +39,6 @@
 *.exe
 *.out
 *.app
+
+# Images
+*.tga
