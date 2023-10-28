@@ -29,27 +29,3 @@ int main(int argc, char **argv)
     delete model;
     return 0;
 }
-
-void drawModel(Canvas *canvas, Model *model)
-{
-    for (int i = 0; i < model->nfaces(); i++)
-    {
-        std::vector<int> face = model->face(i);
-
-        for (int j = 0; j < 3; j++)
-        {
-            // These two vertices make up a line
-            Vec3f v0 = model->vert(face[j]);
-            Vec3f v1 = model->vert(face[(j + 1) % 3]);
-
-            // This converts the line into the canvas space
-            int x0 = (v0.x + 1.0) * width / 2.0;
-            int y0 = (v0.y + 1.0) * height / 2.0;
-            int x1 = (v1.x + 1.0) * width / 2.0;
-            int y1 = (v1.y + 1.0) * height / 2.0;
-
-            // Drawing the line
-            canvas->drawLine(x0, y0, x1, y1, white);
-        }
-    }
-}
