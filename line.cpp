@@ -10,6 +10,35 @@ Line::Line(int x0, int y0, int x1, int y1, TGAImage* image, TGAColor &color, boo
     this->image = image;
     this->color = color;
 
+    this->transform(this->image, this->color);
+
+    if (draw) {
+        this->draw(this->x0, this->y0, this->x1, this->y1, this->image, this->color);
+    }
+}
+
+Line::Line(Vec2i v0, Vec2i v1, TGAImage* image, TGAColor &color, bool draw)
+{
+    this->x0 = v0.x;
+    this->y0 = v0.y;
+    this->x1 = v1.x;
+    this->y1 = v1.y;
+    this->image = image;
+    this->color = color;
+
+    this->transform(this->image, this->color);
+
+    if (draw) {
+        this->draw(this->x0, this->y0, this->x1, this->y1, this->image, this->color);
+    }
+}
+
+Line::~Line()
+{
+}
+
+void Line::transform(TGAImage *image, TGAColor &color)
+{
     if (std::abs(this->x0 - this->x1) < std::abs(this->y0 - this->y1)) // Transpose line if height greater than width
     {
         std::swap(this->x0, this->y0);
@@ -22,17 +51,9 @@ Line::Line(int x0, int y0, int x1, int y1, TGAImage* image, TGAColor &color, boo
         std::swap(this->x0, this->x1);
         std::swap(this->y0, this->y1);
     }
-
-    if (draw) {
-        this->draw(this->x0, this->y0, this->x1, this->y1, this->image, this->color);
-    }
 }
 
-Line::~Line()
-{
-}
-
-void Line::draw(int x0, int y0, int x1, int y1, TGAImage* image, TGAColor &color)
+void Line::draw(int x0, int y0, int x1, int y1, TGAImage *image, TGAColor &color)
 {
     const int dx = x1 - x0;
     const int dy = y1 - y0;
