@@ -20,9 +20,9 @@ int main(int argc, char **argv)
     Vec2i t0[3] = {Vec2i(10, 70), Vec2i(50, 160), Vec2i(70, 80)};
     Vec2i t1[3] = {Vec2i(180, 50), Vec2i(150, 1), Vec2i(70, 180)};
     Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
-    canvas.drawTriangle(t0[0], t0[1], t0[2], red);
-    canvas.drawTriangle(t1[0], t1[1], t1[2], white);
-    canvas.drawTriangle(t2[0], t2[1], t2[2], green);
+    canvas.drawTriangle(t0, red);
+    canvas.drawTriangle(t1, white);
+    canvas.drawTriangle(t2, green);
 
     canvas.flip_vertically(); // Origin should be left bottom corner
     canvas.write_tga_file("output.tga");

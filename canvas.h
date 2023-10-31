@@ -7,7 +7,7 @@
 
 class Canvas : public TGAImage {
     private:
-        void fillTriangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAColor &color);
+        Vec3f barycentric(Vec2i *pts, Vec2i P);
 
     public:
         Canvas(int width, int height, int bpp = Canvas::RGB);
@@ -15,8 +15,9 @@ class Canvas : public TGAImage {
 
         void drawLine(int x0, int y0, int x1, int y1, TGAColor &color);
         void drawLine(Vec2i v0, Vec2i v1, TGAColor &color);
-        void drawTriangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAColor &color, bool fill = true);
+        void drawTriangle(Vec2i *pts, TGAColor &color);
         void drawModel(Model *model, TGAColor &color);
+        
 };
 
 #endif

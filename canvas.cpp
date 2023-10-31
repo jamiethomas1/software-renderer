@@ -1,4 +1,5 @@
 #include "canvas.h"
+#include <vector>
 
 TGAColor tempred = TGAColor(255, 0, 0, 255);
 TGAColor tempgreen = TGAColor(0, 255, 0, 255);
@@ -65,76 +66,47 @@ void Canvas::drawLine(Vec2i v0, Vec2i v1, TGAColor &color)
     this->drawLine(v0.x, v0.y, v1.x, v1.y, color);
 }
 
-void Canvas::drawTriangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAColor &color, bool fill)
+Vec3f Canvas::barycentric(Vec2i *pts, Vec2i P)
 {
     /**
-     * Sort vertices by increasing y-value. This is so that the line that goes top-to-bottom of the
-     * whole triangle is always the line t2-t0. This makes line-by-line filling easier.
+     * ^ is being used as a cross-product operator.
+     * This formula is "looking for a vector (u,v,1) that is orthogonal to (ABx,ACx,PAx) and (ABy,ACy,PAy) at the same time"
      */
-    if (t0.y > t1.y)
-        std::swap(t0, t1);
-    if (t0.y > t2.y)
-        std::swap(t0, t2);
-    if (t1.y > t2.y)
-        std::swap(t1, t2);
-
-    this->drawLine(t0, t1, color);
-    this->drawLine(t1, t2, color);
-    this->drawLine(t2, t0, color);
-
-    if (fill)
-    {
-        this->fillTriangle(t0, t1, t2, color);
-    }
+    Vec3f u = Vec3f(pts[2].x - pts[0].x, pts[1].x - pts[0].x, pts[0].x - P.x) ^ Vec3f(pts[2].y - pts[0].y, pts[1].y - pts[0].y, pts[0].y - P.y);
+    if (std::abs(u.z) < 1)
+        return Vec3f(-1, 1, 1);
+    return Vec3f(1.0 - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
 }
 
-void Canvas::fillTriangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAColor &color)
+void Canvas::drawTriangle(Vec2i *pts, TGAColor &color)
 {
-    // Total triangle height, for calculating points along the total height of the triangle
-    int totalHeight = t2.y - t0.y;
+    Vec2i bboxmin(this->width - 1, this->height - 1);
+    Vec2i bboxmax(0, 0);
+    Vec2i clamp(this->width - 1, this->height - 1);
 
-    // Bottom segment height for calculating points along the height of the bottom segment
-    int bottomSegmentHeight = t1.y - t0.y + 1;
-    for (int y = t0.y; y < t1.y; y++)
+    /**
+     * Loop through all vertices of triangle, generating two sets of co-ordinates which make up a
+     * bounding box for the triangle.
+     */
+    for (int i = 0; i < 3; i++)
     {
-        /**
-         * Normalised representation of how far along the triangle/segment height current y-value is
-         * Naming assumes left side is bottom-to-top of triangle, but can be different
-         */
-        float leftFraction = (float)(y - t0.y) / totalHeight;
-        float rightFraction = (float)(y - t0.y) / bottomSegmentHeight;
+        bboxmin.x = std::max(0, std::min(bboxmin.x, pts[i].x));
+        bboxmin.y = std::max(0, std::min(bboxmin.y, pts[i].y));
 
-        /**
-         * Get difference between top and bottom vertices of triangle/segment, multiply by relevant
-         * normalised fraction to find position along that line, then add to t0 to position
-         * that point on the image relative to the triangle
-         */
-        Vec2i leftPoint = t0 + (t2 - t0) * leftFraction;
-        Vec2i rightPoint = t0 + (t1 - t0) * rightFraction;
-
-        this->drawLine(leftPoint.x, y, rightPoint.x, y, color);
+        bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, pts[i].x));
+        bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, pts[i].y));
     }
 
-    // Top segment height for calculating points along the height of the top segment
-    int topSegmentHeight = t2.y - t1.y;
-    for (int y = t1.y; y < t2.y; y++)
+    Vec2i P; // This will be used to test each pixel inside the bounding box for whether it is inside or outside the triangle
+    for (P.x = bboxmin.x; P.x <= bboxmax.x; P.x++)
     {
-        /**
-         * Normalised representation of how far along the triangle/segment height current y-value is
-         * Naming assumes left side is bottom-to-top of triangle, but can be different
-         */
-        float leftFraction = (float)(y - t0.y) / totalHeight;
-        float rightFraction = (float)(y - t1.y) / topSegmentHeight;
-
-        /**
-         * Get difference between top and bottom vertices of triangle/segment, multiply by relevant
-         * normalised fraction to find position along that line, then add to t0 to position
-         * that point on the image relative to the triangle
-         */
-        Vec2i leftPoint = t0 + (t2 - t0) * leftFraction;
-        Vec2i rightPoint = t1 + (t2 - t1) * rightFraction;
-
-        this->drawLine(leftPoint.x, y, rightPoint.x, y, color);
+        for (P.y = bboxmin.y; P.y <= bboxmax.y; P.y++)
+        {
+            Vec3f bc_screen = barycentric(pts, P);
+            if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
+                continue;
+            this->set(P.x, P.y, color);
+        }
     }
 }
 
